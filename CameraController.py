@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 
 
+# Class for interfacing with the camera
 class CameraController:
 
     # Initializes camera interface
@@ -16,6 +17,7 @@ class CameraController:
         return self.camera.read()[0]
 
 
+# Class for detecting handrails in an image
 class Detector:
 
     # Initializes the Detector's color range to BLUE
@@ -42,7 +44,9 @@ class Detector:
 
         # Remove noise and smooth edges of the binary image
         kernel = np.ones((5, 5), np.uint8)
-        return cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel)
+        binary_closed = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel)
+        binary_opened = cv2.morphologyEx(binary_closed, cv2.MORPH_OPEN, kernel)
+        return binary_opened
 
     # Returns an unfiltered list of detections given a pixel mask
     def get_rects_from_mask(self, pixel_mask):
@@ -55,10 +59,10 @@ class Detector:
 
     # Removes duplicate detections using Non-Maximal Suppression
     def apply_nms(self, detections):
+        # score = detection width * detection height
         scores = [detection[1][0] * detection[1][1] for detection in detections]
-        print(scores)
+        # filtered_ids is a list of the valid detections left after NMS
         filtered_ids = cv2.dnn.NMSBoxesRotated(detections, scores, 0, 0.2)
-        print(filtered_ids)
         return [detections[id[0]] for id in filtered_ids]
 
 
@@ -72,14 +76,14 @@ def test_camera_to_rect_pipeline():
 
 def test_picture_to_rect_pipeline():
     detector = Detector()
-    img = cv2.imread("/home/dan/Pictures/oneHandrail.jpg")
+    img = cv2.imread("oneHandrail.jpg")       # make this a relative path so that it works for everyone
     detections = detector.get_rects_from_bgr(img)
     print(len(detections))
 
     box = cv2.boxPoints(detections[0])
     box = np.int0(box)
-    print(box)
     cv2.drawContours(img, [box], 0, (0, 0, 255), 2)
+    img = cv2.resize(img, (700, 500))
     cv2.imshow("original", img)
     cv2.waitKey(0)
 
