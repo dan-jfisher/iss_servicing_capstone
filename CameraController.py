@@ -52,7 +52,7 @@ class Detector:
     def get_rects_from_mask(self, pixel_mask):
         # store a list of contours outlining the shapes leftover
         #       a contour is a list of points outlining a shape in a binary image
-        contours, hierarchy = cv2.findContours(pixel_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        src, contours, hierarchy = cv2.findContours(pixel_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
         # return a list of rectangles that best fit each contour
         return [cv2.minAreaRect(contour) for contour in contours if cv2.contourArea(contour) > 0]
