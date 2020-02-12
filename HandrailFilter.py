@@ -8,13 +8,36 @@ class HandrailFilter:
     def __init__(self):
         self.known_distance = 100  # cm
         self.known_height = 3.5  # cm
-        self.focal_length = -1
+        self.known_width = 25.5 # cm
+        self.focal_length_width = -1
+        self.focal_length_height = -1
 
     def calibrate_from_detection(self, rotatedRect):
-        self.focal_length = rotatedRect[1][1] * self.known_distance / self.known_height  # don't just assume [1][1], get the minimum
+        dims = rotatedRect[1]
+        width = max(dims)
+        height = min(dims)
+        self.calibrate_from_detection_width(width)
+        self.calibrate_from_detection_height(height)
+
+    def calibrate_from_detection_height(self, height):
+        self.focal_length_height = height * self.known_distance / self.known_height
+
+    def calibrate_from_detection_width(self, width):
+        self.focal_length_width = width * self.known_distance / self.known_width
 
     def get_distance_from_detection(self, rotatedRect):
-        return self.known_height * self.focal_length / rotatedRect[1][1]
+        dims = rotatedRect[1]
+        width = max(dims)
+        height = min(dims)
+        distance_h = self.get_distance_from_detection_height(height)
+        distance_w = self.get_distance_from_detection_width(width)
+        return min(distance_h, distance_w)
+
+    def get_distance_from_detection_height(self, height):
+        return self.known_height * self.focal_length_height / height
+
+    def get_distance_from_detection_width(self, width):
+        return self.known_width * self.focal_length_width / width
 
 
 def test_distance_calculator():
