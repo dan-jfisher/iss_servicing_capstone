@@ -39,6 +39,20 @@ class HandrailFilter:
     def get_distance_from_detection_width(self, width):
         return self.known_width * self.focal_length_width / width
 
+    def is_handrail(self, rotatedRect):
+        dims = rotatedRect[1]
+        width = max(dims)
+        height = min(dims)
+        return width / height >= 2  # placeholder comparison
+
+    def remove_non_handrail_detections(self, rotatedRects):
+        filtered_rects = [rect for rect in rotatedRects if self.is_handrail(rect)]
+        return filtered_rects
+
+    def get_valid_detections_and_distances_list(self, rotatedRects):
+        filtered_rects = self.remove_non_handrail_detections(rotatedRects)
+        return [(rect, self.get_distance_from_detection_width(rect)) for rect in filtered_rects]
+
 
 def test_distance_calculator():
     detector = Detector()
@@ -50,6 +64,8 @@ def test_distance_calculator():
     test_img = cv2.imread("Calibration_Images/cal_80cm_45degrees.jpg")
     detection = detector.get_rects_from_bgr(test_img)[0]
     print(handrail_filer.get_distance_from_detection(detection))
+
+# create a test with multiple handrails in frame
 
 
 if __name__ == "__main__":
