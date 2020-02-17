@@ -86,6 +86,15 @@ def test_distance_calculator():
     test_img = cv2.imread("Calibration_Images/cal_80cm_45degrees.jpg")
     detection = detector.get_rects_from_bgr(test_img)[0]
     print(handrail_filer.get_distance_from_detection(detection))
+    return handrail_filer.get_distance_from_detection(detection), detection
+
+def test_angle_calculator():
+    distance, detection = test_distance_calculator()
+    handrail_height_pixels = get_focal_length_from_detection_height
+    handrail_height_m = 3.50266
+    pixel_to_m_conv = handrail_height_m/handrail_height_pixels
+    x_coord = detection[0][0]
+
 
 
 # create a test with multiple handrails in frame
