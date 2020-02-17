@@ -5,7 +5,9 @@ from CameraController import CameraController
 
 
 class CalibrationPackage:
-    def __init__(self, dimension_distance_list=[]):
+    def __init__(self, img_width, img_height, dimension_distance_list=[]):
+        self.image_width = img_height
+        self.image_height = img_height
         self.dimension_distance_list = dimension_distance_list  # width, height, distance
 
     def add_detection(self, rotatedRect, dist):
@@ -24,6 +26,8 @@ class HandrailFilter:
         self.known_width = 25.5  # cm
         self.focal_length_width = -1
         self.focal_length_height = -1
+        self.image_width = 0
+        self.image_height = 0
 
     def calibrate_from_package(self, calibration_pckg):
         # [self.calibrate_from_detection(rect, dist) for rect, dist in calibration_pckg.detection_distances]
@@ -33,6 +37,9 @@ class HandrailFilter:
 
         self.focal_length_width = sum(pair[0] for pair in focal_lengths_list) / len(focal_lengths_list)
         self.focal_length_height = sum(pair[1] for pair in focal_lengths_list) / len(focal_lengths_list)
+
+        self.image_height = calibration_pckg.image_height
+        self.image_width = calibration_pckg.image_width
 
     def calibrate_from_detection(self, rotatedRect, known_distance):
         dims = rotatedRect[1]
