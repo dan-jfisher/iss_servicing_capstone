@@ -22,7 +22,7 @@ class CalibrationPackage:
 class HandrailFilter:
 
     def __init__(self):
-        self.known_height = 3.5  # cm
+        self.known_height = 3.50266  # cm
         self.known_width = 25.5  # cm
         self.focal_length_width = -1
         self.focal_length_height = -1
@@ -82,6 +82,13 @@ class HandrailFilter:
         return [(rect, self.get_distance_from_detection(rect))
                 for rect in self.remove_non_handrail_detections(rotatedRects)]
 
+    def calculate_angle(self, distance, detection):
+        pixel_to_m_conv = self.focal_length_width/distance
+        x_coord = detection[0][0]
+        x_offset_cm = abs(self.image_width/2 - x_coord)/ pixel_to_m_conv
+        angle = tan(x_offset_cm/ distance)
+        print(angle)
+        return(angle)
 
 def test_distance_calculator():
     detector = Detector()
@@ -94,13 +101,6 @@ def test_distance_calculator():
     detection = detector.get_rects_from_bgr(test_img)[0]
     print(handrail_filer.get_distance_from_detection(detection))
     return handrail_filer.get_distance_from_detection(detection), detection
-
-def test_angle_calculator():
-    distance, detection = test_distance_calculator()
-    handrail_height_pixels = get_focal_length_from_detection_height
-    handrail_height_m = 3.50266
-    pixel_to_m_conv = handrail_height_m/handrail_height_pixels
-    x_coord = detection[0][0]
 
 
 
@@ -129,7 +129,7 @@ def test_cam_dist_calculator():
 def test_package_calibration():
     detector = Detector()
     handrail_filer = HandrailFilter()
-    cal_pckg = CalibrationPackage()
+    cal_pckg = CalibrationPackage(0, 0)
     cal1 = cv2.imread("Calibration_Images/cal_1m_0degrees.jpg")
     det1 = detector.get_rects_from_bgr(cal1)[0]
     cal2 = cv2.imread("Calibration_Images/cal_80cm_0degrees.jpg")
@@ -140,6 +140,7 @@ def test_package_calibration():
     test_img = cv2.imread("Calibration_Images/cal_80cm_45degrees.jpg")
     detection = detector.get_rects_from_bgr(test_img)[0]
     print(handrail_filer.get_distance_from_detection(detection))
+    return cal_pckg
 
 
 if __name__ == "__main__":
