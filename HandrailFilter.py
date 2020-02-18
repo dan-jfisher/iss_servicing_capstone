@@ -72,7 +72,7 @@ class HandrailFilter:
         dims = rotatedRect[1]
         width = max(dims)
         height = min(dims)
-        return width / height >= 2  # placeholder comparison
+        return width / height >= 3  # placeholder comparison
 
     def remove_non_handrail_detections(self, rotatedRects):
         filtered_rects = [rect for rect in rotatedRects if self.is_handrail(rect)]
@@ -83,67 +83,85 @@ class HandrailFilter:
                 for rect in self.remove_non_handrail_detections(rotatedRects)]
 
     def calculate_angle(self, distance, detection):
-        pixel_to_m_conv = self.focal_length_width/distance
+        # dims = detection[1]
+        # height = min(dims)
+        # pixel_to_m_conv = height / self.known_height
+        pixel_to_m_conv = self.focal_length_width/distance  # should we use this or the one above????????????????????????
         x_coord = detection[0][0]
-        x_offset_cm = abs(self.image_width/2 - x_coord)/ pixel_to_m_conv
-        angle = tan(x_offset_cm/ distance)
-        print(angle)
-        return(angle)
+        x_offset_cm = abs(self.image_width / 2 - x_coord) / pixel_to_m_conv
+
+        angle = np.arctan(x_offset_cm / distance)
+        return angle
+
 
 def test_distance_calculator():
     detector = Detector()
-    handrail_filer = HandrailFilter()
-    cal_img = cv2.imread("Calibration_Images/cal_1m_0degrees.jpg")
-    detection = detector.get_rects_from_bgr(cal_img)[0]
-    handrail_filer.calibrate_from_detection(detection, 100)
+    handrail_filter = calibrate_from_package_return_handrail_filter()
 
     test_img = cv2.imread("Calibration_Images/cal_80cm_45degrees.jpg")
     detection = detector.get_rects_from_bgr(test_img)[0]
-    print(handrail_filer.get_distance_from_detection(detection))
-    return handrail_filer.get_distance_from_detection(detection), detection
+    print(handrail_filter.get_distance_from_detection(detection))
+    return handrail_filter.get_distance_from_detection(detection)
 
 
+# create a test with multiple handrails in frame        print(angle)
 
-# create a test with multiple handrails in frame
 def test_cam_dist_calculator():
     detector = Detector()
-    handrail_filer = HandrailFilter()
-    cal_img = cv2.imread("Calibration_Images/cal_1m_0degrees.jpg")
-    detection = detector.get_rects_from_bgr(cal_img)[0]
-    handrail_filer.calibrate_from_detection(detection, 100)
+    handrail_filter = calibrate_from_package_return_handrail_filter()
+
+    cam = CameraController()
+    test_img = cam.get_image()
+    cv2.imshow("before", test_img)
+    cv2.waitKey(0)
+    detections = detector.get_rects_from_bgr(test_img)
+    out = handrail_filter.get_valid_detections_and_distances_list(detections)
+
+
+def test_cam_angle_calculator():
+    detector = Detector()
+    handrail_filter = calibrate_from_package_return_handrail_filter()
 
     cam = CameraController()
     test_img = cam.get_image()
     detections = detector.get_rects_from_bgr(test_img)
-    out = handrail_filer.get_valid_detections_and_distances_list(detections)
+    out = handrail_filter.get_valid_detections_and_distances_list(detections)
     for pair in out:
+        theta = handrail_filter.calculate_angle(pair[1], pair[0])
+        # print(theta)
         box = cv2.boxPoints(pair[0])
         box = np.int0(box)
         cv2.drawContours(test_img, [box], 0, (0, 0, 255), 2)
         img = cv2.resize(test_img, (700, 500))
-        cv2.imshow("original", test_img)
+        cv2.imshow("original", img)
         cv2.waitKey(0)
-        print(pair[1])
 
 
 def test_package_calibration():
     detector = Detector()
-    handrail_filer = HandrailFilter()
-    cal_pckg = CalibrationPackage(0, 0)
+    handrail_filter = calibrate_from_package_return_handrail_filter()
+
+    test_img = cv2.imread("Calibration_Images/cal_80cm_45degrees.jpg")
+    detection = detector.get_rects_from_bgr(test_img)[0]
+    print(handrail_filter.get_distance_from_detection(detection))
+
+
+def calibrate_from_package_return_handrail_filter():
+    detector = Detector()
+    handrail_filter = HandrailFilter()
     cal1 = cv2.imread("Calibration_Images/cal_1m_0degrees.jpg")
+    height, width, channels = cal1.shape
+    cal_pckg = CalibrationPackage(width, height)
     det1 = detector.get_rects_from_bgr(cal1)[0]
     cal2 = cv2.imread("Calibration_Images/cal_80cm_0degrees.jpg")
     det2 = detector.get_rects_from_bgr(cal1)[0]
     cal_pckg.add_detection(det1, 100).add_detection(det2, 80)
-    handrail_filer.calibrate_from_package(cal_pckg)
-
-    test_img = cv2.imread("Calibration_Images/cal_80cm_45degrees.jpg")
-    detection = detector.get_rects_from_bgr(test_img)[0]
-    print(handrail_filer.get_distance_from_detection(detection))
-    return cal_pckg
+    handrail_filter.calibrate_from_package(cal_pckg)
+    return handrail_filter
 
 
 if __name__ == "__main__":
     # test_cam_dist_calculator()
     # test_distance_calculator()
-    test_package_calibration()
+    # test_package_calibration()
+    test_cam_angle_calculator()
