@@ -82,7 +82,7 @@ class HandrailFilter:
         return [(rect, self.get_distance_from_detection(rect))
                 for rect in self.remove_non_handrail_detections(rotatedRects)]
 
-    def calculate_angle(self, distance, detection):
+    def get_vector_to_handrail(self, distance, detection):
         # dims = detection[1]
         # height = min(dims)
         # pixel_to_m_conv = height / self.known_height
@@ -90,8 +90,7 @@ class HandrailFilter:
         x_coord = detection[0][0]
         x_offset_cm = abs(self.image_width / 2 - x_coord) / pixel_to_m_conv
 
-        angle = np.arctan(x_offset_cm / distance)
-        return angle
+        return x_offset_cm, distance
 
 
 def test_distance_calculator():
@@ -127,7 +126,7 @@ def test_cam_angle_calculator():
     detections = detector.get_rects_from_bgr(test_img)
     out = handrail_filter.get_valid_detections_and_distances_list(detections)
     for pair in out:
-        theta = handrail_filter.calculate_angle(pair[1], pair[0])
+        # theta = handrail_filter.calculate_angle(pair[1], pair[0])
         # print(theta)
         box = cv2.boxPoints(pair[0])
         box = np.int0(box)
