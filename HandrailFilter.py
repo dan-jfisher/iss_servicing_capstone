@@ -82,7 +82,7 @@ class HandrailFilter:
         return [(rect, self.get_distance_from_detection(rect))
                 for rect in self.remove_non_handrail_detections(rotatedRects)]
 
-    def get_vector_to_handrail(self, distance, detection):
+    def get_vector_to_handrail(self, detection, distance):
         # dims = detection[1]
         # height = min(dims)
         # pixel_to_m_conv = height / self.known_height
