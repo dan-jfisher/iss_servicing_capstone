@@ -6,7 +6,7 @@ class RobotPosition:
     def __init__(self, plane, robot_pos, robot_dir):
         self.plane = plane
         self.robot_pos = robot_pos
-        self.robot_dit = robot_dir
+        self.robot_dir = robot_dir
 
 
 class MapManager:
@@ -26,7 +26,9 @@ class MapManager:
         return handrail_id, max_confidence
 
     def get_handrail_coordinates(self, robot_to_handrail_vector):
-        return 0, 0
+        handrail_x = self.robot_dir[0] * robot_to_handrail_vector + self.robot_pos[0]
+        handrail_y = self.robot_dir[1] * robot_to_handrail_vector + self.robot_pos[1]
+        return handrail_x, handrail_y
 
     def get_distance(self, x1, y1, x2, y2):
         dist_squared = pow((x2 - x1), 2) + pow((y2 - y1), 2)
