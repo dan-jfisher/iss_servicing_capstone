@@ -1,3 +1,7 @@
 [submodule "grove"]
 	path = grove
 	url = https://github.com/Seeed-Studio/grove.py
+	
+[submodule "BreezySLAM"]
+	path = BreezySLAM
+	url = https://github.com/simondlevy/BreezySLAM.git
