@@ -49,9 +49,12 @@ class MapManager:
         return handrail_id, max_confidence
 
     def get_handrail_coordinates(self, robot_to_handrail_vector):
-        handrail_x = self.robot_pos.dir[0] * robot_to_handrail_vector[0] + self.robot_pos.pos[0]
-        handrail_y = self.robot_pos.dir[1] * robot_to_handrail_vector[1] + self.robot_pos.pos[1]
-        return handrail_x, handrail_y
+        # add distanceA in the direction of the robot's unit vector
+        # distanceA is equal to the distance measured by the HandrailLocator
+        # add distanceB in the direction orthogonal to the robot's unit vector
+        # distanceB is equal to the "x-offset" measured by the HandrailLocator
+        # Then add the robot's current position to the result and return
+        return 0, 0
 
     def get_distance(self, x1, y1, x2, y2):
         dist_squared = pow((x2 - x1), 2) + pow((y2 - y1), 2)
@@ -79,7 +82,7 @@ class MapManager:
         x, y, theta = self.slam.getpos()
 
         self.robot_pos.pos = (x, y)
-        self.robot_pos.dir = theta
+        # self.robot_pos.dir = theta  ####################################################### Convert theta to unit vector
 
         # Get current map bytes as grayscale
         self.slam.getmap(self.mapbytes)
