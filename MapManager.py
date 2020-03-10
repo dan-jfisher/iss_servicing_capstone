@@ -4,6 +4,11 @@ import StationMap
 from Detector import Detector
 import HandrailFilter
 from CameraController import CameraController
+from breezyslam.algorithms import RMHC_SLAM
+from breezyslam.sensors import RPLidarA1 as LaserModel
+from rplidar import RPLidar as Lidar
+from roboviz import MapVisualizer
+
 
 class RobotPosition:
     def __init__(self, plane, robot_pos, robot_dir):
@@ -17,7 +22,19 @@ class MapManager:
     def __init__(self, station, robot_pos):
         self.station = station
         self.robot_pos = robot_pos
-        
+
+        # SLAM
+        self.MAP_SIZE_PIXELS = 500
+        self.MAP_SIZE_METERS = 10
+        self.MIN_SAMPLES = 200
+
+        self.lidar = Lidar('/dev/ttyUSB0')
+        self.slam = RMHC_SLAM(LaserModel(), self.MAP_SIZE_PIXELS, self.MAP_SIZE_METERS)
+        self.mapbytes = bytearray(self.MAP_SIZE_PIXELS * self.MAP_SIZE_PIXELS)
+        self.iterator = self.lidar.iter_scans()
+        self.previous_distances = None
+        self.previous_angles = None
+        next(self.iterator)
 
     def assign_id_and_conf_to_handrail_detection(self, robot_to_handrail_vector):
         x, y = self.get_handrail_coordinates(robot_to_handrail_vector)
@@ -39,6 +56,33 @@ class MapManager:
     def get_distance(self, x1, y1, x2, y2):
         dist_squared = pow((x2 - x1), 2) + pow((y2 - y1), 2)
         return pow(dist_squared, 1/2)
+
+    def update(self):
+        # Extract (quality, angle, distance) triples from current scan
+        items = [item for item in next(self.iterator)]
+
+        # Extract distances and angles from triples
+        distances = [item[2] for item in items]
+        angles = [item[1] for item in items]
+
+        # Update SLAM with current Lidar scan and scan angles if adequate
+        if len(distances) > self.MIN_SAMPLES:
+            self.slam.update(distances, scan_angles_degrees=angles)
+            previous_distances = distances.copy()
+            previous_angles = angles.copy()
+
+        # If not adequate, use previous
+        elif self.previous_distances is not None:
+            self.slam.update(self.previous_distances, scan_angles_degrees=self.previous_angles)
+
+        # Get current robot position
+        x, y, theta = self.slam.getpos()
+
+        self.robot_pos.pos = (x, y)
+        self.robot_pos.dir = theta
+
+        # Get current map bytes as grayscale
+        self.slam.getmap(self.mapbytes)
 
 
 def create_sample_map_manager():
@@ -70,6 +114,12 @@ def test_id_assignment_camera():
     vectors = handrail_filter.get_handrail_vectors(test_img)
     for vect in vectors:
         print(map_manager.assign_id_and_conf_to_handrail_detection(vect))
+
+
+def test_lidar():
+    map_manager = create_sample_map_manager()
+    while True:
+        map_manager.update()
 
 
 if __name__=="__main__":

@@ -15,17 +15,18 @@ class CameraController:
         
         time.sleep(0.1)
 
-
     # Returns the most recent image from the camera
     def get_image(self):
         # check camera connection and then store the current frame
         self.camera.capture(self.raw_capture, format="bgr")
         image = self.raw_capture.array
+        self.raw_capture.truncate(0)
         # display the image on screen and wait for a keypress
         return image   
 
 
-
 if __name__ == "__main__":
     camera = CameraController()
+    camera.get_image()
+    time.sleep(1)
     camera.get_image()

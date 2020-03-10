@@ -28,7 +28,7 @@ class HandrailFilter:
         self.focal_length_height = -1
         self.image_width = 0
         self.image_height = 0
-        self.Detector = Detector()
+        self.detector = Detector()
 
     def calibrate_from_package(self, calibration_pckg):
         # [self.calibrate_from_detection(rect, dist) for rect, dist in calibration_pckg.detection_distances]
@@ -129,18 +129,10 @@ def test_cam_angle_calculator():
     handrail_filter = calibrate_from_package_return_handrail_filter()
 
     cam = CameraController()
-    test_img = cam.get_image()
-    detections = detector.get_rects_from_bgr(test_img)
-    out = handrail_filter.get_valid_detections_and_distances_list(detections)
-    for pair in out:
-        # theta = handrail_filter.calculate_angle(pair[1], pair[0])
-        # print(theta)
-        box = cv2.boxPoints(pair[0])
-        box = np.int0(box)
-        cv2.drawContours(test_img, [box], 0, (0, 0, 255), 2)
-        img = cv2.resize(test_img, (700, 500))
-        cv2.imshow("original", img)
-        cv2.waitKey(0)
+    for i in 1, 2:
+        test_img = cam.get_image()
+        out = handrail_filter.get_handrail_vectors(test_img)
+        print(out)
 
 
 def test_package_calibration():
