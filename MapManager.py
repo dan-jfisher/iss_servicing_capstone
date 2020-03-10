@@ -17,6 +17,7 @@ class MapManager:
     def __init__(self, station, robot_pos):
         self.station = station
         self.robot_pos = robot_pos
+        
 
     def assign_id_and_conf_to_handrail_detection(self, robot_to_handrail_vector):
         x, y = self.get_handrail_coordinates(robot_to_handrail_vector)
@@ -59,25 +60,16 @@ def test_id_assignment_easy():
     map_manager = create_sample_map_manager()
     print(map_manager.assign_id_and_conf_to_handrail_detection((100, 50)))
 
+
 def test_id_assignment_camera():
-    detector = Detector()
     handrail_filter = HandrailFilter.calibrate_from_package_return_handrail_filter()
     map_manager = create_sample_map_manager()
 
     cam = CameraController()
     test_img = cam.get_image()
-    detections = detector.get_rects_from_bgr(test_img)
-    out = handrail_filter.get_valid_detections_and_distances_list(detections)
-    for pair in out:
-        detection, distance = pair
-        vect = handrail_filter.get_vector_to_handrail(detection, distance)
+    vectors = handrail_filter.get_handrail_vectors(test_img)
+    for vect in vectors:
         print(map_manager.assign_id_and_conf_to_handrail_detection(vect))
-        # box = cv2.boxPoints(detection)
-        # box = np.int0(box)
-        # cv2.drawContours(test_img, [box], 0, (0, 0, 255), 2)
-        # img = cv2.resize(test_img, (700, 500))
-        # cv2.imshow("original", img)
-        # cv2.waitKey(0)
 
 
 if __name__=="__main__":

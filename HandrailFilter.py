@@ -28,6 +28,7 @@ class HandrailFilter:
         self.focal_length_height = -1
         self.image_width = 0
         self.image_height = 0
+        self.Detector = Detector()
 
     def calibrate_from_package(self, calibration_pckg):
         # [self.calibrate_from_detection(rect, dist) for rect, dist in calibration_pckg.detection_distances]
@@ -83,14 +84,20 @@ class HandrailFilter:
                 for rect in self.remove_non_handrail_detections(rotatedRects)]
 
     def get_vector_to_handrail(self, detection, distance):
-        # dims = detection[1]
-        # height = min(dims)
-        # pixel_to_m_conv = height / self.known_height
-        pixel_to_m_conv = self.focal_length_width/distance  # should we use this or the one above????????????????????????
+        pixel_to_m_conv = self.focal_length_width/distance
         x_coord = detection[0][0]
         x_offset_cm = abs(self.image_width / 2 - x_coord) / pixel_to_m_conv
 
         return x_offset_cm, distance
+
+    # This is the function that will be called by the MainController
+    def get_handrail_vectors(self, image):
+        detections = self.detector.get_rects_from_bgr(image)
+        detection_distance_pairs = self.get_valid_detections_and_distances_list(detections)
+        handrail_vector_list = []
+        for detection, distance in detection_distance_pairs:
+            handrail_vector_list += self.get_vector_to_handrail(detection, distance)
+        return handrail_vector_list
 
 
 def test_distance_calculator():
