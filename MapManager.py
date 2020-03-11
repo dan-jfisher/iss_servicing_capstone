@@ -48,13 +48,16 @@ class MapManager:
         handrail_id = self.robot_pos.plane.handrails_on_plane[id].handrail_id
         return handrail_id, max_confidence
 
-    def get_handrail_coordinates(self, robot_to_handrail_vector):
-        # add distanceA in the direction of the robot's unit vector
-        # distanceA is equal to the distance measured by the HandrailLocator
-        # add distanceB in the direction orthogonal to the robot's unit vector
-        # distanceB is equal to the "x-offset" measured by the HandrailLocator
-        # Then add the robot's current position to the result and return
-        return 0, 0
+    def get_handrail_coordinates(self, distance_in_dir, distance_orth_dir):
+        # Find orthogonal vector based on position of handrail in picture
+        if distance_orth_dir < 0:
+            orthogonal_matrix = np.array([[0, -1], [1, 0]])
+        else:
+            orthogonal_matrix = np.array([[0, 1], [-1, 0]])
+        orthogonal_vector = np.matmul(self.robot_pos.dir, orthogonal_matrix)
+
+        handrail_location = self.robot_pos.dir * distance_in_dir + orthogonal_vector * distance_orth_dir # Calculate handrail location in global coordinates
+        return handrail_location
 
     def get_distance(self, x1, y1, x2, y2):
         dist_squared = pow((x2 - x1), 2) + pow((y2 - y1), 2)

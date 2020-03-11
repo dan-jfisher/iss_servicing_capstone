@@ -1,12 +1,24 @@
 # This file contains the functions that control the hardware of the robot
-def drive_forward():
-    # Move left and right wheels forward
+def drive_forward(roboclaw, address, speed, delay_time):
+    # Move forward for delay_time seconds
+    roboclaw.ForwardMixed(address, speed)
+    time.sleep(delay_time)
 
-def turn(angle):
-    # Turn x degrees
+def turn_right(robowclaw, address, speed, delay_time):
+    # Turn right for delay_time seconds
+    roboclaw.TurnRightMixed(address, speed)
+    time.sleep(delay_time)
 
-def drive_backward():
-    # Rotate wheels backward
+
+def turn_left(roboclaw, address, speed, delay_time):
+    # Turn left for delay_time seconds
+    roboclaw.TurnLeftMixed(address, speed)
+    time.sleep(delay_time)
+
+def drive_backward(roboclaw, address, speed, delay_time):
+    # Drive backwards for delay_time seconds
+    roboclaw.TurnLeftMixed(address, speed)
+    time.sleep(delay_time)
 
 def read_front_distance_sensor():
     # Get distance from front ToF sensor
@@ -51,7 +63,7 @@ def adjust_wall_grip(drone_angle):
     # Stop drone fan
     # set_wheel_speed
 
-def clean_handrail(handrailID, robotposition):
+def clean_handrail(roboclaw, handrailID, robotposition):
     # While (handrail_is_not_clean)
         # Lower cleaning mechanism
         # Initiate vibe motors
@@ -59,9 +71,8 @@ def clean_handrail(handrailID, robotposition):
         # Lift cleaning mechanism
         # If (handrail is long)
             # For (each section n>1)
-                # drive_backward
-                # turn 90 degrees
-                # drive_forward
-                # pause()
-                # turn -90 degrees
-                # drive_forward
+                drive_backward(roboclaw, motor_address, speed, delay_time) # drive_backward
+                turn_right(roboclaw, motor_address, speed, delay_time) # turn 90 degrees
+                drive_forward(roboclaw, motor_address, speed, delay_time) # drive_forward
+                turn_left(roboclaw, motor_address, speed, delay_time) # turn -90 degrees
+                drive_forward(roboclaw, motor_address, speed, delay_time) #drive_forward
