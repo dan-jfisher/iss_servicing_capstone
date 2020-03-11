@@ -1,4 +1,20 @@
+import HandrailLocator
+import MapManager
+import CameraController
+
 # This code manages the state of the robot and calls the necessary functions
+
+class MainController:
+
+    def __init__(self):
+        self.handrail_locator = HandrailLocator.calibrate_from_package_return_handrail_filter()
+        self.map_manager = MapManager.create_sample_map_manager()
+        self.camera = CameraController()
+
+    def find_and_id_handrails(self):
+        handrail_vectors = self.handrail_locator.get_handrail_vectors()
+        id_confidence_list = [self.map_manager.assign_id_and_conf_to_handrail_detection(distance, offset) for
+                              distance, offset in handrail_vectors]
 
     # Initializing robot
         # Instantiate robot object

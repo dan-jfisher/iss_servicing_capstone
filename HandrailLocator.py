@@ -88,7 +88,7 @@ class HandrailFilter:
         x_coord = detection[0][0]
         x_offset_cm = abs(self.image_width / 2 - x_coord) / pixel_to_m_conv
 
-        return x_offset_cm, distance
+        return distance, x_offset_cm
 
     # This is the function that will be called by the MainController
     def get_handrail_vectors(self, image):

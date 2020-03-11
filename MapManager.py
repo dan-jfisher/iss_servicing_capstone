@@ -2,12 +2,21 @@ import numpy as np
 import cv2
 import StationMap
 from Detector import Detector
-import HandrailFilter
+import HandrailLocator
 from CameraController import CameraController
 from breezyslam.algorithms import RMHC_SLAM
 from breezyslam.sensors import RPLidarA1 as LaserModel
 from rplidar import RPLidar as Lidar
 from roboviz import MapVisualizer
+import pybreezyslam
+
+
+class SlamFactory:
+    def build(self, laserModel, map_size_pix, map_size_m, initial_position=(-1, -1)):
+        slam = RMHC_SLAM(LaserModel(), self.MAP_SIZE_PIXELS, self.MAP_SIZE_METERS)
+        if not initial_position == (-1, -1):
+            slam.position = pybreezyslam.Position(initial_position[0] * 10, initial_position[0] * 10, 0)
+        return slam
 
 
 class RobotPosition:
@@ -29,7 +38,8 @@ class MapManager:
         self.MIN_SAMPLES = 200
 
         self.lidar = Lidar('/dev/ttyUSB0')
-        self.slam = RMHC_SLAM(LaserModel(), self.MAP_SIZE_PIXELS, self.MAP_SIZE_METERS)
+        self.initial_pos_cm = (0, 0)
+        self.slam = SlamFactory.build(LaserModel(), self.MAP_SIZE_PIXELS, self.MAP_SIZE_METERS, initial_pos_cm)
         self.mapbytes = bytearray(self.MAP_SIZE_PIXELS * self.MAP_SIZE_PIXELS)
         self.iterator = self.lidar.iter_scans()
         self.previous_distances = None
@@ -46,6 +56,7 @@ class MapManager:
         max_confidence = max(norm_confidence)
         id = norm_confidence.index(max_confidence)
         handrail_id = self.robot_pos.plane.handrails_on_plane[id].handrail_id
+        ######################################################################################## update handrail location
         return handrail_id, max_confidence
 
     def get_handrail_coordinates(self, distance_in_dir, distance_orth_dir):
@@ -56,7 +67,8 @@ class MapManager:
             orthogonal_matrix = np.array([[0, 1], [-1, 0]])
         orthogonal_vector = np.matmul(self.robot_pos.dir, orthogonal_matrix)
 
-        handrail_location = self.robot_pos.dir * distance_in_dir + orthogonal_vector * distance_orth_dir # Calculate handrail location in global coordinates
+        # Calculate handrail location in global coordinates
+        handrail_location = self.robot_pos.dir * distance_in_dir + orthogonal_vector * distance_orth_dir
         return handrail_location
 
     def get_distance(self, x1, y1, x2, y2):
@@ -84,7 +96,7 @@ class MapManager:
         # Get current robot position
         x, y, theta = self.slam.getpos()
 
-        self.robot_pos.pos = (x, y)
+        self.robot_pos.pos = (x / 10, y / 10)  # convert from mm to cm
         # self.robot_pos.dir = theta  ####################################################### Convert theta to unit vector
 
         # Get current map bytes as grayscale
@@ -112,7 +124,7 @@ def test_id_assignment_easy():
 
 
 def test_id_assignment_camera():
-    handrail_filter = HandrailFilter.calibrate_from_package_return_handrail_filter()
+    handrail_filter = HandrailLocator.calibrate_from_package_return_handrail_filter()
     map_manager = create_sample_map_manager()
 
     cam = CameraController()
